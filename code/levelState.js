@@ -9,6 +9,8 @@ Mario.LevelState = function(difficulty, type) {
     this.Level = null;
     this.Layer = null;
     this.BgLayer = [];
+    Mario.LevelState.instance = this;
+
 
     this.Paused = false;
     this.Sprites = null;
@@ -468,3 +470,11 @@ Mario.LevelState.prototype.CheckForChange = function(context) {
 		}
 	}
 };
+
+Mario.LevelState.prototype.refreshCommands = function() {
+    // The command system works through the global MarioCommandManager
+    // No need to set anything - the character will automatically pick up commands
+    console.log("[LevelState] Commands refreshed! Command queue has", 
+        window.MarioCommandManager ? window.MarioCommandManager.getCommandCount() : 0, "commands");
+};
+

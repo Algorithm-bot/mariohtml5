@@ -45,6 +45,13 @@ Mario.Character = function() {
     this.LastFire = false;
     this.NewLarge = false;
     this.NewFire = false;
+    
+    // Command execution state
+    this.isExecutingCommand = false;
+    this.currentCommand = null;
+    this.commandSteps = 0;
+    this.commandWaitFrames = 0;
+    this.commandDirection = 0;
 };
 
 Mario.Character.prototype = new Mario.NotchSprite(null);
@@ -82,6 +89,13 @@ Mario.Character.prototype.Initialize = function(world) {
     
     //Sprite
     this.Carried = null;
+    
+    // Initialize command execution state
+    this.isExecutingCommand = false;
+    this.currentCommand = null;
+    this.commandSteps = 0;
+    this.commandWaitFrames = 0;
+    this.commandDirection = 0;
     
     this.SetLarge(this.Large, this.Fire);
 };
@@ -123,6 +137,50 @@ Mario.Character.prototype.Blink = function(on) {
         this.XPicO = 8;
         this.YPicO = 15;
         this.PicWidth = this.PicHeight = 16;
+    }
+};
+
+Mario.Character.prototype.processCommands = function() {
+    // If not currently executing a command and there are commands in the queue
+    if (!this.isExecutingCommand && window.MarioCommandManager) {
+        var nextCommand = window.MarioCommandManager.getNextCommand();
+        if (nextCommand) {
+            this.currentCommand = nextCommand;
+            this.isExecutingCommand = true;
+            
+            if (nextCommand.action === 'move') {
+                this.commandSteps = nextCommand.steps;
+                this.commandDirection = nextCommand.direction;
+            } else if (nextCommand.action === 'wait') {
+                this.commandWaitFrames = nextCommand.frames;
+            }
+        }
+    }
+    
+    // Process current command
+    if (this.isExecutingCommand && this.currentCommand) {
+        if (this.currentCommand.action === 'move') {
+            // Move command is handled in the main Move function
+            // Just decrement steps here
+            if (this.commandSteps > 0) {
+                this.commandSteps--;
+            } else {
+                // Move command completed
+                this.isExecutingCommand = false;
+                this.currentCommand = null;
+            }
+        } else if (this.currentCommand.action === 'wait') {
+            // Wait command
+            if (this.commandWaitFrames > 0) {
+                this.commandWaitFrames--;
+            } else {
+                // Wait command completed
+                this.isExecutingCommand = false;
+                this.currentCommand = null;
+            }
+        }
+        // Other commands (jump, fireball, duck) are handled in the main Move function
+        // and clear themselves when completed
     }
 };
 
@@ -173,14 +231,21 @@ Mario.Character.prototype.Move = function() {
     this.Visible = (((this.InvulerableTime / 2) | 0) & 1) === 0;
     
     this.WasOnGround = this.OnGround;
-    var sideWaysSpeed = Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.A) ? 1.2 : 0.6;
     
-    if (this.OnGround) {
-        if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.Down) && this.Large) {
-            this.Ducking = true;
-        } else {
-            this.Ducking = false;
-        }
+    // Process command queue instead of keyboard input
+    this.processCommands();
+    
+    // Handle ducking based on commands
+    if (this.OnGround && this.currentCommand && this.currentCommand.action === 'duck' && this.Large) {
+        this.Ducking = true;
+        // Command completed, clear it
+        this.currentCommand = null;
+        this.isExecutingCommand = false;
+    } else if (this.currentCommand && this.currentCommand.action === 'stopDuck') {
+        this.Ducking = false;
+        // Command completed, clear it
+        this.currentCommand = null;
+        this.isExecutingCommand = false;
     }
         
     if (this.Xa > 2) {
@@ -190,7 +255,8 @@ Mario.Character.prototype.Move = function() {
         this.Facing = -1;
     }
     
-    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.S) || (this.JumpTime < 0 && !this.OnGround && !this.Sliding)) {
+    // Handle jumping based on commands
+    if (this.currentCommand && this.currentCommand.action === 'jump') {
         if (this.JumpTime < 0) {
             this.Xa = this.XJumpSpeed;
             this.Ya = -this.JumpTime * this.YJumpSpeed;
@@ -203,6 +269,9 @@ Mario.Character.prototype.Move = function() {
             this.Ya = this.JumpTime * this.YJumpSpeed;
             this.OnGround = false;
             this.Sliding = false;
+            // Command completed, clear it
+            this.currentCommand = null;
+            this.isExecutingCommand = false;
         } else if (this.Sliding && this.MayJump) {
             Enjine.Resources.PlaySound("jump");
             this.XJumpSpeed = -this.Facing * 6;
@@ -213,46 +282,66 @@ Mario.Character.prototype.Move = function() {
             this.OnGround = false;
             this.Sliding = false;
             this.Facing = -this.Facing;
+            // Command completed, clear it
+            this.currentCommand = null;
+            this.isExecutingCommand = false;
         } else if (this.JumpTime > 0) {
             this.Xa += this.XJumpSpeed;
             this.Ya = this.JumpTime * this.YJumpSpeed;
             this.JumpTime--;
         }
+    } else if (this.JumpTime < 0 && !this.OnGround && !this.Sliding) {
+        // Continue existing jump
+        this.Xa = this.XJumpSpeed;
+        this.Ya = -this.JumpTime * this.YJumpSpeed;
+        this.JumpTime++;
+    } else if (this.JumpTime > 0) {
+        this.Xa += this.XJumpSpeed;
+        this.Ya = this.JumpTime * this.YJumpSpeed;
+        this.JumpTime--;
     } else {
         this.JumpTime = 0;
     }
     
-    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.Left) && !this.Ducking) {
-        if (this.Facing === 1) {
-            this.Sliding = false;
-        }
-        this.Xa -= sideWaysSpeed;
-        if (this.JumpTime >= 0) {
-            this.Facing = -1;
+    // Handle movement based on commands
+    if (this.currentCommand && this.currentCommand.action === 'move' && !this.Ducking) {
+        var sideWaysSpeed = 0.6; // Default speed
+        
+        if (this.currentCommand.direction === 'left') {
+            if (this.Facing === 1) {
+                this.Sliding = false;
+            }
+            this.Xa -= sideWaysSpeed;
+            if (this.JumpTime >= 0) {
+                this.Facing = -1;
+            }
+        } else if (this.currentCommand.direction === 'right') {
+            if (this.Facing === -1) {
+                this.Sliding = false;
+            }
+            this.Xa += sideWaysSpeed;
+            if (this.JumpTime >= 0) {
+                this.Facing = 1;
+            }
         }
     }
     
-    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.Right) && !this.Ducking) {
-        if (this.Facing === -1) {
-            this.Sliding = false;
-        }
-        this.Xa += sideWaysSpeed;
-        if (this.JumpTime >= 0) {
-            this.Facing = 1;
-        }
+    // Handle fireball shooting based on commands
+    if (this.currentCommand && this.currentCommand.action === 'fireball' && this.CanShoot && this.Fire && this.World.FireballsOnScreen < 2) {
+        Enjine.Resources.PlaySound("fireball");
+        this.World.AddSprite(new Mario.Fireball(this.World, this.X + this.Facing * 6, this.Y - 20, this.Facing));
+        // Command completed, clear it
+        this.currentCommand = null;
+        this.isExecutingCommand = false;
     }
     
-    if ((!Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.Left) && !Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.Right)) || this.Ducking || this.Ya < 0 || this.OnGround) {
+    // Update sliding state
+    if ((!this.currentCommand || this.currentCommand.action !== 'move') || this.Ducking || this.Ya < 0 || this.OnGround) {
         this.Sliding = false;  
     }
     
-    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.A) && this.CanShoot && this.Fire && this.World.FireballsOnScreen < 2) {
-        Enjine.Resources.PlaySound("fireball");
-        this.World.AddSprite(new Mario.Fireball(this.World, this.X + this.Facing * 6, this.Y - 20, this.Facing));
-    }
-    
-    this.CanShoot = !Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.A);
-    this.MayJump = (this.OnGround || this.Sliding) && !Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.S);
+    this.CanShoot = true; // Always allow shooting when commanded
+    this.MayJump = (this.OnGround || this.Sliding);
     this.XFlip = (this.Facing === -1);
     this.RunTime += Math.abs(this.Xa) + 5;
     
@@ -302,12 +391,10 @@ Mario.Character.prototype.Move = function() {
     }
     
     if (this.Carried !== null) {
-        this.Carried.X *= this.X + this.Facing * 8;
-        this.Carried.Y *= this.Y - 2;
-        if (!Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.A)) {
-            this.Carried.Release(this);
-            this.Carried = null;
-        }
+        this.Carried.X = this.X + this.Facing * 8;
+        this.Carried.Y = this.Y - 2;
+        // Keep carrying the object - no automatic release
+        // User would need to write code to release it if needed
     }
 };
 
@@ -544,19 +631,15 @@ Mario.Character.prototype.Stomp = function(object) {
         this.Sliding = false;
         this.InvulnerableTime = 1;
     } else if (object instanceof Mario.Shell) {
-        if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.A) && object.Facing === 0) {
-            this.Carried = object;
-            object.Carried = true;
-        } else {
-            Enjine.Resources.PlaySound("kick");
-            this.XJumpSpeed = 0;
-            this.YJumpSpeed = -1.9;
-            this.JumpTime = 8;
-            this.Ya = this.JumpTime * this.YJumpSpeed;
-            this.OnGround = false;
-            this.Sliding = false;
-            this.InvulnerableTime = 1;
-        }
+        // Always kick the shell (no keyboard input needed)
+        Enjine.Resources.PlaySound("kick");
+        this.XJumpSpeed = 0;
+        this.YJumpSpeed = -1.9;
+        this.JumpTime = 8;
+        this.Ya = this.JumpTime * this.YJumpSpeed;
+        this.OnGround = false;
+        this.Sliding = false;
+        this.InvulnerableTime = 1;
     }
 };
 
@@ -637,13 +720,9 @@ Mario.Character.prototype.Kick = function(shell) {
         return;
     }
     
-    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.A)) {
-        this.Carried = shell;
-        shell.Carried = true;
-    } else {
-        Enjine.Resources.PlaySound("kick");
-        this.InvulnerableTime = 1;
-    }
+    // Always kick the shell (no keyboard input needed)
+    Enjine.Resources.PlaySound("kick");
+    this.InvulnerableTime = 1;
 };
 
 Mario.Character.prototype.Get1Up = function() {

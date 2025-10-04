@@ -1,0 +1,105 @@
+🎮 MARIO API COMMANDS REFERENCE
+=====================================
+
+MOVEMENT COMMANDS
+-----------------
+marioAPI.move(direction, steps)
+- Parameters:
+  * direction: "left" or "right" (string)
+  * steps: Number between 1-50 (integer)
+- Example: marioAPI.move("right", 10);
+
+ACTION COMMANDS
+--------------
+marioAPI.jump()
+- Makes Mario jump
+- Example: marioAPI.jump();
+
+marioAPI.fireball()
+- Shoots a fireball (only works if Mario has fire power)
+- Example: marioAPI.fireball();
+
+DUCKING COMMANDS
+----------------
+marioAPI.duck()
+- Makes Mario duck (only works if Mario is large)
+- Example: marioAPI.duck();
+
+marioAPI.stopDuck()
+- Makes Mario stop ducking
+- Example: marioAPI.stopDuck();
+
+TIMING COMMANDS
+---------------
+marioAPI.wait(frames)
+- Parameters:
+  * frames: Number between 1-100 (integer)
+- Example: marioAPI.wait(30); // Wait for 30 frames
+
+INFORMATION COMMANDS
+--------------------
+marioAPI.getPosition()
+- Returns Mario's current position and state
+- Returns: {x, y, onGround, facing}
+- Example: let pos = marioAPI.getPosition();
+
+marioAPI.getQueueLength()
+- Returns the number of commands currently in the queue
+- Example: let count = marioAPI.getQueueLength();
+
+USAGE EXAMPLES
+==============
+
+Basic Movement Sequence:
+------------------------
+marioAPI.move("right", 5);
+marioAPI.jump();
+marioAPI.move("left", 3);
+
+Combat Sequence:
+----------------
+marioAPI.move("right", 3);
+marioAPI.fireball();
+marioAPI.wait(10);
+marioAPI.fireball();
+
+Ducking Sequence:
+-----------------
+marioAPI.move("right", 2);
+marioAPI.duck();
+marioAPI.wait(20);
+marioAPI.stopDuck();
+
+Complex Pattern:
+----------------
+marioAPI.move("right", 8);
+marioAPI.jump();
+marioAPI.move("left", 4);
+marioAPI.fireball();
+marioAPI.wait(15);
+marioAPI.move("right", 6);
+
+IMPORTANT NOTES
+===============
+
+1. Sequential Execution: Commands execute one after another, not simultaneously
+2. Power Requirements: 
+   - fireball() only works if Mario has fire power
+   - duck() only works if Mario is large
+3. Limits:
+   - move() steps: 1-50
+   - wait() frames: 1-100
+   - fireball() limited by screen fireball count (max 2)
+4. Read-Only: getPosition() and getQueueLength() don't add commands to the queue
+
+PRO TIPS
+========
+
+- Use wait() to create pauses between actions
+- Combine movement with jumping for platforming
+- Use fireball() for combat sequences
+- Check getPosition() to make decisions based on Mario's location
+- Use getQueueLength() to see how many commands are queued
+
+All commands are now properly integrated and will execute sequentially 
+without causing game restarts!

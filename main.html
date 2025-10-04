@@ -1,63 +1,175 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Infinite Mario - JavaScript</title>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-	</head>
-	<body>
-		<canvas id="canvas" width="640" height="480">
-			<p>Your browser does not support the canvas element.</p>
-		</canvas>
+<head>
+    <title>Infinite Mario - JavaScript</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+</head>
+<body>
+    <div id="game-container" style="position: relative; display: inline-block;">
+        <canvas id="canvas" width="640" height="480">
+            <p>Your browser does not support the canvas element.</p>
+        </canvas>
+        
+        <!-- Code Editor Interface -->
+        <div id="code-editor-panel" style="position: absolute; top: 500px; left: 90px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; max-width: 500px;">
+            <h3 style="margin: 0 0 10px 0; color: #00ff00;">Mario Code Editor</h3>
+            <textarea id="code-editor" placeholder="// Write your Mario commands here&#10;// Available functions:&#10;// marioAPI.move('left'|'right', steps)&#10;// marioAPI.jump()&#10;// marioAPI.wait(frames)&#10;// marioAPI.fireball()&#10;// marioAPI.duck() / marioAPI.stopDuck()&#10;// marioAPI.getPosition()&#10;//&#10;// Example:&#10;// marioAPI.move('right', 5);&#10;// marioAPI.jump();&#10;// marioAPI.move('left', 3);" 
+                style="width: 100%; height: 120px; background: #1a1a1a; color: #00ff00; border: 1px solid #333; padding: 8px; font-family: 'Courier New', monospace; font-size: 11px; resize: vertical; box-sizing: border-box;"></textarea>
+            <div style="margin-top: 8px;">
+                <button id="execute-button" style="background: #00aa00; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Execute Code</button>
+                <button id="clear-button" style="background: #aa0000; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 8px;">Clear</button>
+            </div>
+            <div id="status-message" style="margin-top: 8px; font-size: 10px; color: #ffff00;"></div>
+        </div>
+    </div>
 
-        <!-- Enjine Includes -->
-        <script src="Enjine/core.js"></script>
-        <script src="Enjine/gameCanvas.js"></script>
-        <script src="Enjine/keyboardInput.js"></script>
-        <script src="Enjine/resources.js"></script>
-        <script src="Enjine/drawable.js"></script>
-        <script src="Enjine/state.js"></script>
-        <script src="Enjine/gameTimer.js"></script>
-        <script src="Enjine/camera.js"></script>
-        <script src="Enjine/drawableManager.js"></script>
-        <script src="Enjine/sprite.js"></script>
-        <script src="Enjine/spriteFont.js"></script>
-        <script src="Enjine/frameSprite.js"></script>
-        <script src="Enjine/animatedSprite.js"></script>
-        <script src="Enjine/collideable.js"></script>
-        <script src="Enjine/application.js"></script>
+    <!-- Enjine Includes -->
+    <script src="Enjine/core.js"></script>
+    <script src="Enjine/gameCanvas.js"></script>
+    <script src="Enjine/keyboardInput.js"></script>
+    <script src="Enjine/resources.js"></script>
+    <script src="Enjine/drawable.js"></script>
+    <script src="Enjine/state.js"></script>
+    <script src="Enjine/gameTimer.js"></script>
+    <script src="Enjine/camera.js"></script>
+    <script src="Enjine/drawableManager.js"></script>
+    <script src="Enjine/sprite.js"></script>
+    <script src="Enjine/spriteFont.js"></script>
+    <script src="Enjine/frameSprite.js"></script>
+    <script src="Enjine/animatedSprite.js"></script>
+    <script src="Enjine/collideable.js"></script>
+    <script src="Enjine/application.js"></script>
 
-        <!-- Actual game code -->
-        <script src="code/setup.js"></script>
-        <script src="code/spriteCuts.js"></script>
-        <script src="code/level.js"></script>
-        <script src="code/backgroundGenerator.js"></script>
-        <script src="code/backgroundRenderer.js"></script>
-        <script src="code/improvedNoise.js"></script>
-        <script src="code/notchSprite.js"></script>
-        <script src="code/character.js"></script>
-        <script src="code/levelRenderer.js"></script>
-        <script src="code/levelGenerator.js"></script>
-        <script src="code/spriteTemplate.js"></script>
-        <script src="code/enemy.js"></script>
-        <script src="code/fireball.js"></script>
-        <script src="code/sparkle.js"></script>
-        <script src="code/coinAnim.js"></script>
-        <script src="code/mushroom.js"></script>
-		<script src="code/particle.js"></script>
-		<script src="code/fireFlower.js"></script>
-        <script src="code/bulletBill.js"></script>
-        <script src="code/flowerEnemy.js"></script>
-        <script src="code/shell.js"></script>
+    <!-- Actual game code -->
+    <script src="code/commandManager.js"></script>
+    <script src="code/setup.js"></script>
+    <script src="code/spriteCuts.js"></script>
+    <script src="code/level.js"></script>
+    <script src="code/backgroundGenerator.js"></script>
+    <script src="code/backgroundRenderer.js"></script>
+    <script src="code/improvedNoise.js"></script>
+    <script src="code/notchSprite.js"></script>
+    <script src="code/character.js"></script>
+    <script src="code/levelRenderer.js"></script>
+    <script src="code/levelGenerator.js"></script>
+    <script src="code/spriteTemplate.js"></script>
+    <script src="code/enemy.js"></script>
+    <script src="code/fireball.js"></script>
+    <script src="code/sparkle.js"></script>
+    <script src="code/coinAnim.js"></script>
+    <script src="code/mushroom.js"></script>
+    <script src="code/particle.js"></script>
+    <script src="code/fireFlower.js"></script>
+    <script src="code/bulletBill.js"></script>
+    <script src="code/flowerEnemy.js"></script>
+    <script src="code/shell.js"></script>
 
-        <script src="code/titleState.js"></script>
-        <script src="code/loadingState.js"></script>
-        <script src="code/loseState.js"></script>
-        <script src="code/winState.js"></script>
-        <script src="code/mapState.js"></script>
-        <script src="code/levelState.js"></script>
+    <script src="code/titleState.js"></script>
+    <script src="code/loadingState.js"></script>
+    <script src="code/loseState.js"></script>
+    <script src="code/winState.js"></script>
+    <script src="code/mapState.js"></script>
+    <script src="code/levelState.js"></script>
 
-        <script src="code/music.js"></script>
+    <script src="code/music.js"></script>
 
-        <script>$(document).ready(function() { new Enjine.Application().Initialize(new Mario.LoadingState(), 320, 240) });</script>
-	</body>
+    <!-- Code execution and UI handling -->
+   <!-- Replace your existing "Code execution and UI handling" script with this -->
+<script>
+    $(document).ready(function() {
+        window.Mario = window.Mario || {};
+        // create or reuse global app
+        window.Mario.GlobalApplication = window.Mario.GlobalApplication || new Enjine.Application();
+        // initialize once if not already initialized
+        if (!window.Mario.GlobalApplication.__initialized) {
+            Mario.GlobalApplication.Initialize(new Mario.LoadingState(), 320, 240);
+            window.Mario.GlobalApplication.__initialized = true;
+        }
+
+        setupCodeEditor();
+    });
+
+    function setupCodeEditor() {
+        const executeButton = document.getElementById('execute-button');
+        const clearButton = document.getElementById('clear-button');
+        const codeEditor = document.getElementById('code-editor');
+
+        if (executeButton) executeButton.addEventListener('click', executeUserCode);
+        if (clearButton) clearButton.addEventListener('click', clearCodeEditor);
+
+        if (codeEditor && !codeEditor.hasAttribute('data-initialized')) {
+            codeEditor.addEventListener('focus', function() {
+                if (!this.hasAttribute('data-initialized')) {
+                    this.setAttribute('data-initialized', 'true');
+                    if (this.value.trim() === '') {
+                        this.value = '// Example Mario commands:\nmarioAPI.move("right", 5);\nmarioAPI.jump();\nmarioAPI.move("left", 3);\nmarioAPI.wait(10);\nmarioAPI.fireball();';
+                    }
+                }
+            });
+        }
+    }
+
+    // Removed reloadLevel() function - it was causing game restarts
+    // The command system now works directly through MarioCommandManager
+
+    function executeUserCode() {
+    const codeEditor = document.getElementById('code-editor');
+    if (!codeEditor) return;
+
+    const userCode = codeEditor.value.trim();
+    if (!userCode) {
+        updateStatusMessage('Please enter some code to execute!', true);
+        return;
+    }
+
+    // Clear previous commands
+    MarioCommandManager.clearCommands();
+    clearStatusMessage();
+
+    try {
+        // Execute user code in a safe context with marioAPI available
+        const safeExecutor = new Function('marioAPI', userCode);
+        safeExecutor(window.marioAPI);
+
+        const commandCount = MarioCommandManager.getCommandCount();
+        if (commandCount > 0) {
+            updateStatusMessage(`Code executed successfully! ${commandCount} commands queued.`);
+            console.log(`[executeUserCode] ${commandCount} commands queued successfully`);
+        } else {
+            updateStatusMessage('Code executed but no commands were generated.', true);
+        }
+    } catch (error) {
+        console.error('Error executing user code:', error);
+        updateStatusMessage(`Error: ${error.message}`, true);
+    }
+}
+  
+
+    function clearCodeEditor() {
+        const codeEditor = document.getElementById('code-editor');
+        if (codeEditor) {
+            codeEditor.value = '';
+            codeEditor.focus();
+        }
+        if (window.MarioCommandManager && typeof MarioCommandManager.clearCommands === 'function') {
+            MarioCommandManager.clearCommands();
+        }
+        clearStatusMessage();
+    }
+
+    function updateStatusMessage(message, isError = false) {
+        const status = document.getElementById('status-message');
+        if (status) {
+            status.style.color = isError ? '#ff5555' : '#ffff00';
+            status.textContent = message;
+        }
+    }
+
+    function clearStatusMessage() {
+        const status = document.getElementById('status-message');
+        if (status) status.textContent = '';
+    }
+</script>
+
+</body>
 </html>
