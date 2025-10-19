@@ -36,16 +36,41 @@ marioAPI.wait(frames)
   * frames: Number between 1-100 (integer)
 - Example: marioAPI.wait(30); // Wait for 30 frames
 
-INFORMATION COMMANDS
---------------------
+INFORMATION COMMANDS (READ-ONLY)
+--------------------------------
 marioAPI.getPosition()
 - Returns Mario's current position and state
 - Returns: {x, y, onGround, facing}
+- Also displays position in status message
 - Example: let pos = marioAPI.getPosition();
+
+marioAPI.logPosition()
+- Displays Mario's position in a detailed, formatted way
+- Shows position, ground status, facing direction, and timestamp
+- More visual than getPosition()
+- Example: marioAPI.logPosition();
 
 marioAPI.getQueueLength()
 - Returns the number of commands currently in the queue
 - Example: let count = marioAPI.getQueueLength();
+
+NOTE: These are READ-ONLY functions that don't add commands to the queue.
+They execute immediately and show information about Mario's current state.
+
+EXAMPLE USAGE:
+--------------
+// Check Mario's position
+marioAPI.logPosition();
+
+// Move and check again
+marioAPI.move("right", 5);
+marioAPI.getPosition();
+
+// Use position in conditional logic
+let pos = marioAPI.getPosition();
+if (pos.x > 100) {
+    marioAPI.jump();
+}
 
 
 
@@ -82,6 +107,12 @@ if (pos.onGround) {
     marioAPI.jump();
 } else {
     marioAPI.move("right", 2);
+}
+
+// Check Mario's position and display it
+marioAPI.logPosition();
+if (marioAPI.getPosition().x > 200) {
+    marioAPI.move("left", 3);
 }
 
 

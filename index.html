@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mario Code Editor - JavaScript Game</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -13,8 +18,8 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Press Start 2P', cursive;
+            background: #5c94fc; /* Mario Sky Blue */
             min-height: 100vh;
             display: flex;
             overflow: hidden;
@@ -28,12 +33,12 @@
         
         .code-panel {
             width: 40%;
-            background: linear-gradient(145deg, #2c3e50, #34495e);
-            border-right: 3px solid #3498db;
+            background: #d9a46f; /* Mario Block Brown */
+            border-right: 5px solid #a56a39;
             display: flex;
             flex-direction: column;
             padding: 20px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.4);
         }
         
         .code-header {
@@ -42,15 +47,26 @@
         }
         
         .code-header h1 {
-            color: #ecf0f1;
-            font-size: 24px;
-            margin-bottom: 5px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            color: #e52521; /* Mario Red */
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
         }
         
         .code-header p {
-            color: #bdc3c7;
-            font-size: 14px;
+            color: #2c3e50;
+            font-size: 0.6rem;
+            line-height: 1.5;
+        }
+
+        .help-link {
+            color: #3d85c6; /* Mario Blue */
+            text-decoration: none;
+            transition: color 0.2s;
+            font-size: medium;
+        }
+        .help-link:hover {
+            color: #e52521;
         }
         
         .code-editor-container {
@@ -60,90 +76,89 @@
         }
         
         .code-editor-label {
-            color: #00ff00;
+            color: #000;
             font-weight: bold;
             margin-bottom: 10px;
-            font-size: 16px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            font-size: 0.7rem;
         }
         
         #code-editor {
             flex: 1;
-            background: #1a1a1a;
-            color: #00ff00;
-            border: 2px solid #333;
+            background: #2b2b2b;
+            color: #fbd000; /* Coin Yellow */
+            border: 4px solid #000;
             border-radius: 8px;
             padding: 15px;
             font-family: 'Courier New', 'Monaco', monospace;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 14px;
+            line-height: 1.5;
             resize: none;
             outline: none;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
             transition: border-color 0.3s ease;
         }
         
         #code-editor:focus {
-            border-color: #00ff00;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            border-color: #fbd000;
         }
         
         .button-container {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             margin: 15px 0;
         }
         
         .btn {
             flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
+            padding: 15px 20px;
+            border: 3px solid #000;
+            border-radius: 8px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 0.7rem;
+            font-family: 'Press Start 2P', cursive;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            box-shadow: 0 5px 0 #000;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #000;
         }
         
         .btn-execute {
-            background: linear-gradient(145deg, #27ae60, #2ecc71);
+            background: #008f39; /* Pipe Green */
             color: white;
-            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
         }
         
         .btn-execute:hover {
-            background: linear-gradient(145deg, #2ecc71, #27ae60);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(39, 174, 96, 0.4);
+            background: #00a843;
         }
         
         .btn-clear {
-            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            background: #e52521; /* Mario Red */
             color: white;
-            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
         }
         
         .btn-clear:hover {
-            background: linear-gradient(145deg, #c0392b, #e74c3c);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(231, 76, 60, 0.4);
+            background: #ff4141;
         }
         
         #status-message {
-            background: rgba(0,0,0,0.7);
-            color: #ffff00;
+            background: rgba(0,0,0,0.8);
+            color: #fbd000;
             padding: 10px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 0.6rem;
             min-height: 20px;
-            border-left: 3px solid #f39c12;
+            border-left: 5px solid #fbd000;
+            font-family: 'Press Start 2P', cursive;
         }
         
         .game-panel {
             width: 60%;
-            background: #000;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png'), #5c94fc;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -152,52 +167,41 @@
         
         #game-container {
             position: relative;
-            border: 3px solid #3498db;
+            border: 5px solid #a56a39;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
             overflow: hidden;
+            background: #000;
         }
         
         #canvas {
             display: block;
-            background: #000;
-        }
-        
-        .game-overlay {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            border: 1px solid #3498db;
         }
         
         .quick-commands {
-            margin-top: 15px;
+            margin-top: auto; /* Pushes to the bottom */
             padding: 15px;
-            background: rgba(0,0,0,0.3);
+            background: #a56a39;
             border-radius: 6px;
-            border: 1px solid #444;
+            border: 3px solid #000;
         }
         
         .quick-commands h4 {
-            color: #3498db;
+            color: #fbd000;
             margin-bottom: 10px;
-            font-size: 14px;
+            font-size: 0.7rem;
         }
         
         .quick-commands code {
             display: block;
-            background: #1a1a1a;
-            color: #00ff00;
-            padding: 5px 8px;
-            margin: 3px 0;
+            background: #2b2b2b;
+            color: #fff;
+            padding: 6px 8px;
+            margin: 4px 0;
             border-radius: 3px;
-            font-size: 11px;
-            border-left: 3px solid #00ff00;
+            font-size: 0.6rem;
+            font-family: 'Courier New', monospace;
+            border-left: 4px solid #fbd000;
         }
         
         @media (max-width: 1200px) {
@@ -207,63 +211,55 @@
             
             .code-panel {
                 width: 100%;
-                height: 40%;
+                height: 45%;
                 border-right: none;
-                border-bottom: 3px solid #3498db;
+                border-bottom: 5px solid #a56a39;
             }
             
             .game-panel {
                 width: 100%;
-                height: 60%;
+                height: 55%;
             }
         }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <!-- Code Editor Panel (Left Side) -->
         <div class="code-panel">
             <div class="code-header">
-                <h1>🎮 Mario Code Editor</h1>
-                <p>Control Mario with JavaScript commands</p>
+                <h1>Mario Code Editor</h1>
+                <p>Control Mario with JavaScript!<br><a href="help.html" target="_blank" class="help-link">API Help ❓</a></p>
             </div>
             
             <div class="code-editor-container">
-                <label class="code-editor-label">📝 Write your Mario commands:</label>
+                <label class="code-editor-label">📝 Your Script:</label>
                 <textarea id="code-editor"></textarea>
                 
                 <div class="button-container">
-                    <button id="execute-button" class="btn btn-execute">🚀 Execute Code</button>
-                    <button id="clear-button" class="btn btn-clear">🗑️ Clear</button>
+                    <button id="execute-button" class="btn btn-execute">▶ RUN</button>
+                    <button id="clear-button" class="btn btn-clear">CLEAR</button>
                 </div>
                 
                 <div id="status-message"></div>
                 
                 <div class="quick-commands">
                     <h4>⚡ Quick Commands:</h4>
-                    <code>marioAPI.move("left", 5)</code>
-                    <code>marioAPI.jump()</code>
-                    <code>marioAPI.wait(30)</code>
-                    <code>Looping statements like for, while, do while</code>
-                    <code>Conditional statements like if, else, switch</code>
-                    <code>Function definitions</code>
-                    
+                    <code>marioAPI.move("left", 10);</code>
+                    <code>marioAPI.jump();</code>
+                    <code>for (let i = 0; i < 3; i++) { marioAPI.jump(); }</code>
                 </div>
             </div>
         </div>
         
-        <!-- Game Panel (Right Side) -->
         <div class="game-panel">
             <div id="game-container">
                 <canvas id="canvas" width="640" height="480">
                     <p>Your browser does not support the canvas element.</p>
                 </canvas>
-
             </div>
         </div>
     </div>
 
-    <!-- Enjine Includes -->
     <script src="Enjine/core.js"></script>
     <script src="Enjine/gameCanvas.js"></script>
     <script src="Enjine/keyboardInput.js"></script>
@@ -280,7 +276,6 @@
     <script src="Enjine/collideable.js"></script>
     <script src="Enjine/application.js"></script>
 
-    <!-- Actual game code -->
     <script src="code/commandManager.js"></script>
     <script src="code/setup.js"></script>
     <script src="code/spriteCuts.js"></script>
@@ -315,8 +310,7 @@
 
     <script src="code/music.js"></script>
 
-    <!-- Code execution and UI handling -->
-<script>
+    <script>
     $(document).ready(function() {
         window.Mario = window.Mario || {};
         // create or reuse global app
@@ -326,7 +320,6 @@
             Mario.GlobalApplication.Initialize(new Mario.LoadingState(), 320, 240);
             window.Mario.GlobalApplication.__initialized = true;
         }
-
         setupCodeEditor();
     });
 
@@ -339,51 +332,51 @@
         if (clearButton) clearButton.addEventListener('click', clearCodeEditor);
 
         if (codeEditor && !codeEditor.hasAttribute('data-initialized')) {
-            codeEditor.addEventListener('focus', function() {
-                if (!this.hasAttribute('data-initialized')) {
-                    this.setAttribute('data-initialized', 'true');
-                    if (this.value.trim() === '') {
-                        this.value = '// Example Mario commands:\nmarioAPI.move("right", 5);';
-                    }
-                }
-            });
+            // Set initial placeholder text
+            codeEditor.value = '// Your commands here!\nmarioAPI.move("right", 20);\nmarioAPI.jump();';
+            codeEditor.setAttribute('data-initialized', 'true');
         }
     }
-
-    
 
     function executeUserCode() {
-    const codeEditor = document.getElementById('code-editor');
-    if (!codeEditor) return;
+        const codeEditor = document.getElementById('code-editor');
+        if (!codeEditor) return;
 
-    const userCode = codeEditor.value.trim();
-    if (!userCode) {
-        updateStatusMessage('Please enter some code to execute!', true);
-        return;
-    }
-
-    // Clear previous commands
-    MarioCommandManager.clearCommands();
-    clearStatusMessage();
-
-    try {
-        // Execute user code in a safe context with marioAPI available
-        const safeExecutor = new Function('marioAPI', userCode);
-        safeExecutor(window.marioAPI);
-
-        const commandCount = MarioCommandManager.getCommandCount();
-        if (commandCount > 0) {
-            updateStatusMessage(`Code executed successfully! ${commandCount} commands queued.`);
-            console.log(`[executeUserCode] ${commandCount} commands queued successfully`);
-        } else {
-            updateStatusMessage('Code executed but no commands were generated.', true);
+        const userCode = codeEditor.value.trim();
+        if (!userCode) {
+            updateStatusMessage('Code editor is empty!', true);
+            return;
         }
-    } catch (error) {
-        console.error('Error executing user code:', error);
-        updateStatusMessage(`Error: ${error.message}`, true);
+
+        // Clear previous commands
+        MarioCommandManager.clearCommands();
+        clearStatusMessage();
+
+        try {
+            // Execute user code in a safe context with marioAPI available
+            const safeExecutor = new Function('marioAPI', userCode);
+            safeExecutor(window.marioAPI);
+
+            const commandCount = MarioCommandManager.getCommandCount();
+            
+            const hasReadOnlyFunctions = userCode.includes('getPosition()') || 
+                                         userCode.includes('logPosition()') || 
+                                         userCode.includes('getQueueLength()');
+            
+            if (commandCount > 0) {
+                updateStatusMessage(`Success! ${commandCount} commands queued.`);
+                console.log(`[executeUserCode] ${commandCount} commands queued successfully`);
+            } else if (hasReadOnlyFunctions) {
+                updateStatusMessage('Read-only functions executed.');
+                console.log(`[executeUserCode] Read-only functions executed successfully`);
+            } else {
+                updateStatusMessage('Code ran, but no Mario commands were found.', true);
+            }
+        } catch (error) {
+            console.error('Error executing user code:', error);
+            updateStatusMessage(`Error: ${error.message}`, true);
+        }
     }
-}
-  
 
     function clearCodeEditor() {
         const codeEditor = document.getElementById('code-editor');
@@ -400,7 +393,7 @@
     function updateStatusMessage(message, isError = false) {
         const status = document.getElementById('status-message');
         if (status) {
-            status.style.color = isError ? '#ff5555' : '#ffff00';
+            status.style.color = isError ? '#ff5555' : '#fbd000';
             status.textContent = message;
         }
     }

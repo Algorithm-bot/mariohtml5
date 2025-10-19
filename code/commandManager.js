@@ -64,16 +64,46 @@ window.marioAPI = {
     
     // Get Mario's current position (for debugging/planning)
     getPosition: function() {
-        if (window.Mario && window.Mario.Character && window.Mario.Character.prototype) {
-            // This is a read-only function, doesn't add to command queue
-            return {
-                x: window.Mario.Character.prototype.X || 0,
-                y: window.Mario.Character.prototype.Y || 0,
-                onGround: window.Mario.Character.prototype.OnGround || false,
-                facing: window.Mario.Character.prototype.Facing || 0
+        let position = { x: 0, y: 0, onGround: false, facing: 0 };
+        
+        if (window.Mario && window.Mario.MarioCharacter) {
+            position = {
+                x: Math.round(window.Mario.MarioCharacter.X || 0),
+                y: Math.round(window.Mario.MarioCharacter.Y || 0),
+                onGround: window.Mario.MarioCharacter.OnGround || false,
+                facing: window.Mario.MarioCharacter.Facing || 0
             };
         }
-        return { x: 0, y: 0, onGround: false, facing: 0 };
+        
+        // Display position in status message
+        const statusElement = document.getElementById('status-message');
+        if (statusElement) {
+            statusElement.textContent = `Mario Position: X=${position.x}, Y=${position.y}, OnGround=${position.onGround}, Facing=${position.facing}`;
+            statusElement.style.color = '#00ff00';
+        }
+        
+        // Also log to console
+        console.log('Mario Position:', position);
+        
+        return position;
+    },
+    
+    // Display Mario's position in a more visible way
+    logPosition: function() {
+        const pos = this.getPosition();
+        const statusElement = document.getElementById('status-message');
+        if (statusElement) {
+            statusElement.innerHTML = `
+                <div style="background: rgba(0,0,0,0.8); padding: 10px; border-radius: 5px; margin: 5px 0;">
+                    <strong>🎮 Mario Status:</strong><br>
+                    📍 Position: (${pos.x}, ${pos.y})<br>
+                    🏃 On Ground: ${pos.onGround ? 'Yes' : 'No'}<br>
+                    👈 Facing: ${pos.facing === 1 ? 'Right' : pos.facing === -1 ? 'Left' : 'Center'}<br>
+                    ⏰ Time: ${new Date().toLocaleTimeString()}
+                </div>
+            `;
+        }
+        return pos;
     },
     
     // Get the number of commands currently in queue

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Mario API Commands Reference</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        background: linear-gradient(to bottom, #5cd6ff, #a8e6ff);
+        font-family: 'Press Start 2P', cursive;
+        color: #222;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    header {
+        text-align: center;
+        background: #ff4141;
+        color: #fff;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        border-bottom: 5px solid #ffcb05;
+    }
+    header h1 {
+        font-size: 1.2rem;
+        margin: 0;
+        letter-spacing: 2px;
+    }
+    .content {
+        max-width: 900px;
+        margin: 40px auto;
+        background: #fff7e6;
+        border: 3px solid #ffcb05;
+        border-radius: 12px;
+        padding: 20px 30px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    h2 {
+        color: #ff4141;
+        font-size: 0.9rem;
+        border-bottom: 2px dashed #ffcb05;
+        padding-bottom: 5px;
+        margin-top: 30px;
+    }
+    pre {
+        background: #2b2b2b;
+        color: #00ff88;
+        padding: 10px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 0.6rem;
+    }
+    ul {
+        font-size: 0.6rem;
+        list-style-type: none;
+        padding-left: 10px;
+    }
+    ul li::before {
+        content: "🍄 ";
+    }
+    footer {
+        text-align: center;
+        padding: 20px;
+        background: #ffcb05;
+        color: #000;
+        font-size: 0.6rem;
+        border-top: 3px solid #ff4141;
+        margin-top: 40px;
+    }
+    .mario {
+        width: 80px;
+        animation: jump 1s infinite alternate;
+    }
+    @keyframes jump {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-20px); }
+    }
+    
+    /* Styles for the new collapsible sections */
+    details {
+        margin-top: 20px;
+        border: 2px solid #ffcb05;
+        border-radius: 8px;
+        background: #fff;
+        padding: 15px;
+        transition: background-color 0.2s;
+    }
+    details:hover {
+        background-color: #fffaf0;
+    }
+    summary {
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #ff4141;
+        font-weight: bold;
+        outline: none;
+        user-select: none;
+    }
+    summary::marker {
+        content: '▶ ';
+        color: #ff4141;
+    }
+    details[open] summary::marker {
+        content: '▼ ';
+    }
+    .explanation-content {
+        padding-top: 15px;
+        font-size: 0.65rem;
+        line-height: 1.6;
+        border-top: 1px dashed #ffcb05;
+        margin-top: 10px;
+    }
+    .explanation-content h3 {
+        font-size: 0.7rem;
+        color: #0055d4;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+    .explanation-content p, .explanation-content ul {
+        margin-bottom: 12px;
+    }
+    .explanation-content code {
+        background-color: #e0e0e0;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-size: 0.6rem;
+        color: #d9534f;
+    }
+</style>
+</head>
+
+<body>
+<header>
+    <img src="mario.png" alt="Mario" class="mario"><br>
+    <h1>🎮 MARIO API COMMANDS REFERENCE</h1>
+</header>
+
+<div class="content">
+    <h2>🏃 MOVEMENT COMMANDS</h2>
+    <ul>
+        <li><b>marioAPI.move(direction, steps)</b> — Moves Mario left or right.</li>
+        <li><b>Parameters:</b> direction ("left"/"right"), steps (1–50)</li>
+    </ul>
+    <pre>marioAPI.move("right", 10);</pre>
+
+    <h2>🔥 ACTION COMMANDS</h2>
+    <ul>
+        <li><b>marioAPI.jump()</b> — Makes Mario jump.</li>
+        <li><b>marioAPI.fireball()</b> — Shoots a fireball (only if Mario has fire power).</li>
+    </ul>
+    <pre>
+marioAPI.jump();
+marioAPI.fireball();
+    </pre>
+
+    <h2>🦆 DUCKING COMMANDS</h2>
+    <ul>
+        <li><b>marioAPI.duck()</b> — Mario ducks (only when large).</li>
+        <li><b>marioAPI.stopDuck()</b> — Stops ducking.</li>
+    </ul>
+    <pre>
+marioAPI.duck();
+marioAPI.stopDuck();
+    </pre>
+
+    <h2>⏱️ TIMING COMMANDS</h2>
+    <ul>
+        <li><b>marioAPI.wait(frames)</b> — Waits for a number of frames (1–100).</li>
+    </ul>
+    <pre>marioAPI.wait(30);</pre>
+
+    <h2>📜 INFORMATION COMMANDS</h2>
+    <ul>
+        <li><b>marioAPI.getPosition()</b> — Returns Mario's current {x, y, onGround, facing}.</li>
+        <li><b>marioAPI.logPosition()</b> — Displays detailed position info.</li>
+        <li><b>marioAPI.getQueueLength()</b> — Returns number of commands in queue.</li>
+    </ul>
+
+    <pre>
+let pos = marioAPI.getPosition();
+marioAPI.logPosition();
+let count = marioAPI.getQueueLength();
+    </pre>
+
+    <h2>💡 IMPORTANT NOTES</h2>
+    <ul>
+        <li>Commands execute one after another (sequential).</li>
+        <li>fireball() only if Mario has fire power.</li>
+        <li>duck() only if Mario is large.</li>
+        <li>move(): steps 1–50 | wait(): frames 1–100.</li>
+        <li>getPosition() and getQueueLength() are read-only.</li>
+    </ul>
+
+    <h2>💻 ADVANCED PROGRAMMING PATTERNS</h2>
+    <p style="font-size:0.6rem;">Below are examples of more advanced coding styles you can use with Mario’s API, including loops, conditionals, and classes.</p>
+    <pre>
+// Example: Conditional Logic
+let pos = marioAPI.getPosition();
+if (pos.x > 100) {
+    marioAPI.jump();
+} else {
+    marioAPI.move("right", 5);
+}
+    </pre>
+
+    <h2>⚙️ HOW THE GAME WORKS</h2>
+    
+    <details>
+        <summary>For Programmers (Technical Deep Dive)</summary>
+        <div class="explanation-content">
+            <p>This game is built on a custom JavaScript game engine called "Enjine" and features a state-based architecture, a Node.js backend with MongoDB, and a unique command-driven control system.</p>
+
+            <h3>Core Architecture: Enjine Game Engine</h3>
+            <p>The foundation is <code>Enjine/application.js</code>, which runs the main game loop (Update/Draw). It manages a state machine where each part of the game (title screen, level, leaderboard) is a distinct state object inheriting from <code>Enjine/state.js</code>. This ensures clean separation of concerns between different game phases.</p>
+            <ul>
+                <li>The <code>Application.Update(delta)</code> method is called every frame by <code>requestAnimationFrame</code>.</li>
+                <li>It delegates updates and rendering to the <code>currentState</code> (e.g., <code>LevelState</code>).</li>
+                <li>Sprites, rendering, and animations are handled by classes like <code>Enjine/sprite.js</code>.</li>
+            </ul>
+
+            <h3>State Management Flow</h3>
+            <p>The game progresses through a defined sequence of states:</p>
+            <p><code>NameInputState</code> → <code>TitleState</code> → <code>LoadingState</code> → <code>LevelState</code> → <code>Win/Lose/LeaderboardState</code></p>
+            <ul>
+                <li><code>NameInputState</code> uses the Fetch API to POST the player's name to the server's <code>/api/player</code> endpoint.</li>
+                <li><code>LevelState</code> is the core of gameplay. It initializes the procedurally generated level via <code>levelGenerator.js</code>, manages all sprites (Mario, enemies, items) in a <code>DrawableManager</code>, and controls the camera.</li>
+            </ul>
+
+            <h3>Command Execution System</h3>
+            <p>This is the most unique part of the project. User input doesn't come from keyboard events but from code executed in the UI.</p>
+            <ul>
+                <li><b>Interface (UI):</b> The user writes code that calls the global <code>marioAPI</code> object (defined in <code>code/commandManager.js</code>).</li>
+                <li><b>Safe Execution:</b> When the "Execute" button is clicked, the user's code is executed within a sandboxed function context: <code>new Function('marioAPI', userCode)(window.marioAPI)</code>. This prevents the user code from accessing global scope or manipulating the game's internal state directly.</li>
+                <li><b>Command Queue:</b> Each call to a <code>marioAPI</code> function (e.g., <code>marioAPI.move()</code>) doesn't execute immediately. Instead, it pushes a command object (e.g., <code>{ action: 'move', direction: 'right', steps: 10 }</code>) into a global FIFO queue (<code>commandQueue</code>).</li>
+                <li><b>Processing (Game Logic):</b> Inside the main game loop, <code>Mario.Character.prototype.processCommands()</code> is called every frame. It checks if Mario is currently busy. If not, it pulls the next command from the queue using <code>MarioCommandManager.getNextCommand()</code> (which performs a <code>commandQueue.shift()</code>).</li>
+                <li><b>Sequential Execution:</b> For commands that take time (like <code>move</code> or <code>wait</code>), a state flag (<code>this.isExecutingCommand</code>) and a counter (<code>this.commandSteps</code>) are set on the Mario character object. The command is processed over multiple frames until the counter reaches zero. Only then is the <code>isExecutingCommand</code> flag cleared, allowing the next command to be processed. Instant commands like <code>jump</code> are executed and completed in a single frame.</li>
+            </ul>
+
+            <h3>Backend & Database (Node.js/Express/MongoDB)</h3>
+            <p>The <code>server.js</code> file sets up an Express server with two main responsibilities:</p>
+            <ol>
+                <li><b>Static File Server:</b> It serves the <code>index.html</code>, JavaScript files, images, and sounds.</li>
+                <li><b>REST API:</b> It provides endpoints to interact with a MongoDB Atlas database.
+                    <ul>
+                        <li><code>POST /api/player</code>: Stores a new player's name.</li>
+                        <li><code>POST /api/leaderboard</code>: Stores the result of a completed level (name, time, difficulty).</li>
+                        <li><code>GET /api/leaderboard</code>: Retrieves sorted and paginated leaderboard data for display in the <code>LeaderboardState</code>.</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>The server uses the official <code>mongodb</code> driver for database operations and the <code>cors</code> middleware to allow requests from the game client.</p>
+        </div>
+    </details>
+
+    <details>
+        <summary>For Everyone (Simple Explanation)</summary>
+        <div class="explanation-content">
+            <p>Ever wondered how you can control Mario with just a few lines of code? It's like being a director and giving Mario a script to follow, one instruction at a time. Here’s a simple breakdown!</p>
+
+            <h3>You are the Scriptwriter! ✍️</h3>
+            <p>The code editor on the left is your notepad. You write simple commands like <code>marioAPI.move("right", 10)</code>. Think of <code>marioAPI</code> as your personal translator who speaks "Mario's language." When you write a command, the translator makes a note of it.</p>
+            
+            <h3>Mario's To-Do List 📋</h3>
+            <p>Mario is a very focused guy—he only does one thing at a time. When you hit the "Execute" button, your script is handed to him. He doesn't try to do everything at once. Instead, he puts all your instructions into a single-file line, like people waiting for a ride at an amusement park. This is his "command queue."</p>
+
+            <h3>One Step at a Time... Literally! 🏃‍♂️</h3>
+            <p>The game is constantly running, checking many times per second what it should be doing. In each of these tiny moments (a "frame"), the game asks Mario, "Are you busy?"</p>
+            <ul>
+                <li>If Mario isn't busy, he looks at the first person in line (the first command on his to-do list). Let's say it's "move right for 10 steps."</li>
+                <li>He flips his "busy" sign to ON and starts walking right. He has a little counter in his head. Every frame, he takes one small step and his counter goes down: 10... 9... 8...</li>
+                <li>While his counter is not zero, he keeps telling the game, "I'm still busy with this 'move' command!" The rest of the commands in the line have to wait patiently.</li>
+                <li>Once his counter hits zero, he flips his "busy" sign to OFF. Now he's ready for the next command in line!</li>
+            </ul>
+            <p>This is why commands happen one after another, not all at the same time. It ensures your instructions are followed in the exact order you wrote them.</p>
+
+            <h3>The Global Scoreboard 🏆</h3>
+            <p>When you enter your name or finish a level, the game sends a little message over the internet to a special computer called a "server." This server keeps a giant, shared scoreboard (a "database") for all players. When you visit the leaderboard screen, your game asks the server, "Hey, can I see the latest scores?" The server sends back the list, and that's how you can compete with everyone else playing the game!</p>
+        </div>
+    </details>
+
+</div>
+
+<footer>
+    <p>⭐ Made for Mario Coders | Keep jumping, keep coding!</p>
+</footer>
+</body>
+</html>
