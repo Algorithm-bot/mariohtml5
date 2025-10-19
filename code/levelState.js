@@ -30,6 +30,11 @@ Mario.LevelState = function(difficulty, type) {
 
     this.Delta = 0;
 
+    // Stopwatch for level completion time
+    this.LevelStartTime = 0;
+    this.LevelCompletionTime = 0;
+    this.IsLevelCompleted = false;
+
 	this.GotoMapState = false;
 	this.GotoLoseState = false;
 };
@@ -76,6 +81,11 @@ Mario.LevelState.prototype.Enter = function() {
     this.Sprites.Add(Mario.MarioCharacter);
     this.StartTime = 1;
     this.TimeLeft = 200;
+
+    // Initialize stopwatch
+    this.LevelStartTime = Date.now();
+    this.LevelCompletionTime = 0;
+    this.IsLevelCompleted = false;
 
 	this.GotoMapState = false;
 	this.GotoLoseState = false;
@@ -314,6 +324,13 @@ Mario.LevelState.prototype.Draw = function(context) {
         t = Mario.MarioCharacter.WinTime + this.Delta;
         t = t * t * 0.2;
 
+        // Record level completion time if not already recorded
+        if (!this.IsLevelCompleted) {
+            this.LevelCompletionTime = Date.now();
+            this.IsLevelCompleted = true;
+            this.storeLevelCompletionTime();
+        }
+
         if (t > 900) {
             //TODO: goto map state with level won
 			Mario.GlobalMapState.LevelWon();
@@ -476,5 +493,88 @@ Mario.LevelState.prototype.refreshCommands = function() {
     // No need to set anything - the character will automatically pick up commands
     console.log("[LevelState] Commands refreshed! Command queue has", 
         window.MarioCommandManager ? window.MarioCommandManager.getCommandCount() : 0, "commands");
+};
+
+Mario.LevelState.prototype.storeLevelCompletionTime = function() {
+    const completionTimeMs = this.LevelCompletionTime - this.LevelStartTime;
+    const completionTimeSeconds = Math.round(completionTimeMs / 1000 * 100) / 100; // Round to 2 decimal places
+    
+    console.log(`Level completed in ${completionTimeSeconds} seconds`);
+    
+    // Get player name
+    const playerName = window.Mario && window.Mario.PlayerName ? window.Mario.PlayerName : 'Anonymous';
+    
+    // Store in MongoDB
+    this.saveLevelTimeToDatabase(playerName, completionTimeSeconds, this.LevelDifficulty, this.LevelType);
+};
+
+Mario.LevelState.prototype.saveLevelTimeToDatabase = async function(playerName, completionTime, difficulty, levelType) {
+    try {
+        const isServerMode = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+        
+        if (!isServerMode) {
+            console.warn('Running in file:// mode - cannot save level time to server');
+            // Store locally as fallback
+            this.saveLevelTimeLocally(playerName, completionTime, difficulty, levelType);
+            return;
+        }
+
+        const response = await fetch('/api/leaderboard', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                completionTime: completionTime,
+                difficulty: difficulty,
+                levelType: levelType,
+                timestamp: new Date().toISOString()
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Level completion time stored successfully:', result);
+        
+    } catch (error) {
+        console.error('Error storing level completion time:', error);
+        // Fallback: store locally
+        this.saveLevelTimeLocally(playerName, completionTime, difficulty, levelType);
+    }
+};
+
+Mario.LevelState.prototype.saveLevelTimeLocally = function(playerName, completionTime, difficulty, levelType) {
+    try {
+        const levelData = {
+            playerName: playerName,
+            completionTime: completionTime,
+            difficulty: difficulty,
+            levelType: levelType,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Get existing leaderboard data
+        const existingData = localStorage.getItem('marioLeaderboard');
+        let leaderboard = existingData ? JSON.parse(existingData) : [];
+        
+        // Add new entry
+        leaderboard.push(levelData);
+        
+        // Keep only the last 100 entries
+        if (leaderboard.length > 100) {
+            leaderboard = leaderboard.slice(-100);
+        }
+        
+        // Save back to localStorage
+        localStorage.setItem('marioLeaderboard', JSON.stringify(leaderboard));
+        console.log('Level completion time stored locally');
+        
+    } catch (error) {
+        console.error('Error storing level time locally:', error);
+    }
 };
 
