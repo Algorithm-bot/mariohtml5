@@ -652,3 +652,4 @@ executeUserCode() → safeExecutor(window.marioAPI)        // Execute user code
 - Monitor Mario's state with `marioAPI.getPosition()`
 
 This architecture provides a clean separation of concerns while maintaining tight integration between all systems. The command system allows for flexible user control while the game engine handles all the complex rendering, physics, and state management behind the scenes.
+
