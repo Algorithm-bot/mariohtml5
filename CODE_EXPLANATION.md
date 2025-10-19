@@ -31,6 +31,12 @@ The game allows users to control Mario using JavaScript commands through a code 
 ```
 mariohtml5/
 ├── index.html                 # Main game interface
+├── server.js                  # Express server with MongoDB integration
+├── package.json              # Node.js dependencies and scripts
+├── README.md                 # Project documentation
+├── HOW_TO_RUN.md             # Setup and running instructions
+├── start.bat                 # Windows start script
+├── start.sh                  # Linux/Mac start script
 ├── code/                      # Game logic files
 │   ├── character.js           # Mario character logic
 │   ├── levelState.js         # Game level state management
@@ -38,6 +44,8 @@ mariohtml5/
 │   ├── level.js              # Level data structures
 │   ├── levelGenerator.js    # Procedural level generation
 │   ├── levelRenderer.js      # Level rendering logic
+│   ├── leaderboardState.js   # Leaderboard display state
+│   ├── nameInputState.js     # Player name input state
 │   └── [other game files]    # Various game components
 ├── Enjine/                    # Custom game engine
 │   ├── application.js        # Main application class
@@ -46,6 +54,7 @@ mariohtml5/
 │   └── [other engine files]   # Engine components
 ├── images/                    # Game assets
 ├── sounds/                    # Audio files
+├── node_modules/             # Node.js dependencies
 └── Mario_API_Commands.txt    # API reference
 ```
 
@@ -143,6 +152,107 @@ class Sprite {
 - Manages sprite sheet coordinates
 - Handles camera transformations
 - Provides base for animated sprites
+
+---
+
+## 🌐 Server and Database Integration
+
+### **server.js**
+**Purpose:** Express server that provides MongoDB integration and serves the game.
+
+**Key Components:**
+
+#### **MongoDB Connection:**
+```javascript
+const MONGODB_URI = 'mongodb+srv://sahil:mario77@cluster0.aaiy6sn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const DB_NAME = 'mario_game';
+const COLLECTION_NAME = 'players';
+
+async function connectToMongoDB() {
+    try {
+        const client = new MongoClient(MONGODB_URI);
+        await client.connect();
+        db = client.db(DB_NAME);
+        console.log('Connected to MongoDB successfully');
+    } catch (error) {
+        console.error('Error connecting to MongoDB:', error);
+        process.exit(1);
+    }
+}
+```
+
+#### **API Endpoints:**
+```javascript
+// Store player name
+app.post('/api/player', async (req, res) => {
+    const { name, timestamp } = req.body;
+    const playerData = {
+        name: name.trim(),
+        timestamp: timestamp || new Date().toISOString(),
+        createdAt: new Date()
+    };
+    const result = await db.collection(COLLECTION_NAME).insertOne(playerData);
+    res.json({ success: true, playerId: result.insertedId });
+});
+
+// Get all players (for debugging)
+app.get('/api/players', async (req, res) => {
+    const players = await db.collection(COLLECTION_NAME)
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .toArray();
+    res.json({ success: true, players: players });
+});
+
+// Store leaderboard data
+app.post('/api/leaderboard', async (req, res) => {
+    const { playerName, completionTime, difficulty, levelType } = req.body;
+    const leaderboardEntry = {
+        playerName: playerName.trim(),
+        completionTime: parseFloat(completionTime),
+        difficulty: difficulty || 0,
+        levelType: levelType || 'Overground',
+        timestamp: new Date().toISOString(),
+        createdAt: new Date()
+    };
+    const result = await db.collection('leaderboard').insertOne(leaderboardEntry);
+    res.json({ success: true, entryId: result.insertedId });
+});
+```
+
+**How it works:**
+- **Database Integration:** Connects to MongoDB Atlas cloud database
+- **Player Management:** Stores and retrieves player names
+- **Leaderboard System:** Tracks completion times and scores
+- **Static File Serving:** Serves the game files and assets
+- **CORS Support:** Allows cross-origin requests from the game
+
+### **package.json**
+**Purpose:** Node.js project configuration with dependencies and scripts.
+
+**Key Components:**
+```json
+{
+  "name": "mario-html5-game",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.20.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
+```
+
+**How it works:**
+- **Dependencies:** MongoDB driver, Express web framework, CORS middleware
+- **Scripts:** `npm start` runs the server, `npm run dev` for development
+- **Configuration:** Defines project metadata and Node.js requirements
 
 ---
 
@@ -437,6 +547,119 @@ Mario.LevelGenerator.prototype.CreateLevel = function(type, difficulty) {
 - **Item Distribution:** Places coins, power-ups, and collectibles
 - **Theme Variation:** Different visual styles for different level types
 
+### **code/nameInputState.js**
+**Purpose:** Handles player name collection before starting the game.
+
+**Key Components:**
+
+#### **Name Input Modal:**
+```javascript
+Mario.NameInputState.prototype.createNameInputModal = function() {
+    // Create modal HTML structure
+    this.modal = document.createElement('div');
+    this.modal.className = 'name-input-modal';
+    this.modal.innerHTML = `
+        <div class="modal-content">
+            <h2>Enter Your Name</h2>
+            <input type="text" id="nameInput" placeholder="Your name here..." maxlength="20">
+            <button id="submitName">Start Game</button>
+            <div id="nameStatus"></div>
+        </div>
+    `;
+    document.body.appendChild(this.modal);
+}
+```
+
+#### **Name Storage:**
+```javascript
+Mario.NameInputState.prototype.storePlayerName = async function(name) {
+    try {
+        const response = await fetch('/api/player', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, timestamp: new Date().toISOString() })
+        });
+        
+        if (response.ok) {
+            console.log('Player name stored successfully');
+            this.playerName = name;
+            this.hideModal();
+            // Transition to title state
+            Mario.GlobalApplication.ChangeState(new Mario.TitleState());
+        } else {
+            throw new Error('Failed to store name');
+        }
+    } catch (error) {
+        console.error('Error saving name:', error);
+        // Fallback to local storage
+        localStorage.setItem('marioPlayerName', name);
+        this.playerName = name;
+        this.hideModal();
+        Mario.GlobalApplication.ChangeState(new Mario.TitleState());
+    }
+}
+```
+
+**How it works:**
+- **Modal Interface:** Creates a popup for name input
+- **Database Storage:** Stores names in MongoDB via API
+- **Fallback System:** Uses local storage if server unavailable
+- **State Transition:** Moves to title screen after name collection
+
+### **code/leaderboardState.js**
+**Purpose:** Displays leaderboard with player completion times and scores.
+
+**Key Components:**
+
+#### **Leaderboard Data Loading:**
+```javascript
+Mario.LeaderboardState.prototype.loadLeaderboardData = async function() {
+    try {
+        this.isLoading = true;
+        const response = await fetch('/api/leaderboard?limit=50&sortBy=completionTime&order=asc');
+        const data = await response.json();
+        
+        if (data.success) {
+            this.leaderboardData = data.leaderboard;
+            this.isLoading = false;
+            this.updateLeaderboardDisplay();
+        } else {
+            throw new Error('Failed to load leaderboard');
+        }
+    } catch (error) {
+        console.error('Error loading leaderboard:', error);
+        this.errorMessage = 'Failed to load leaderboard data';
+        this.isLoading = false;
+    }
+}
+```
+
+#### **Leaderboard Display:**
+```javascript
+Mario.LeaderboardState.prototype.updateLeaderboardDisplay = function() {
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = '';
+    
+    this.leaderboardData.forEach((entry, index) => {
+        const row = document.createElement('div');
+        row.className = 'leaderboard-row';
+        row.innerHTML = `
+            <span class="rank">${index + 1}</span>
+            <span class="player-name">${entry.playerName}</span>
+            <span class="time">${entry.completionTime.toFixed(2)}s</span>
+            <span class="difficulty">${entry.difficulty}</span>
+        `;
+        leaderboardList.appendChild(row);
+    });
+}
+```
+
+**How it works:**
+- **Data Retrieval:** Fetches leaderboard data from MongoDB
+- **Sorting and Filtering:** Supports different sort orders and limits
+- **Display Management:** Shows player rankings and completion times
+- **Error Handling:** Graceful fallback if data loading fails
+
 ---
 
 ## 🎯 State Management
@@ -445,10 +668,22 @@ The game uses a state-based architecture where different screens are separate st
 
 ### **State Flow:**
 ```
-TitleState → LoadingState → LevelState → (WinState/LoseState/MapState)
+NameInputState → TitleState → LoadingState → LevelState → (WinState/LoseState/LeaderboardState/MapState)
 ```
 
 ### **Key States:**
+
+#### **NameInputState:**
+- Collects player name before starting
+- Shows modal popup for name input
+- Stores name in MongoDB or local storage
+- Transitions to TitleState when complete
+
+#### **TitleState:**
+- Main menu screen
+- Displays welcome message with player name
+- Shows game instructions
+- Handles navigation to different game modes
 
 #### **LoadingState:**
 - Loads game assets (images, sounds)
@@ -459,11 +694,19 @@ TitleState → LoadingState → LevelState → (WinState/LoseState/MapState)
 - Main gameplay state
 - Manages Mario, enemies, and level
 - Handles win/lose conditions
+- Tracks completion time for leaderboard
+
+#### **LeaderboardState:**
+- Displays player rankings and scores
+- Fetches data from MongoDB
+- Shows completion times and difficulties
+- Allows navigation back to title
 
 #### **WinState/LoseState:**
 - Shows game over screens
-- Displays final score
-- Returns to map or restarts
+- Displays final score and completion time
+- Offers options to restart or view leaderboard
+- Stores completion data in database
 
 ---
 
@@ -608,6 +851,65 @@ executeUserCode() → safeExecutor(window.marioAPI)        // Execute user code
 
 ---
 
+## 🚀 Setup and Running
+
+### **Prerequisites:**
+- **Node.js** (v14 or higher)
+- **MongoDB Atlas** account (or local MongoDB instance)
+- **Modern web browser** with JavaScript support
+
+### **Installation Process:**
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start the server
+npm start
+
+# 3. Open browser to http://localhost:3000
+```
+
+### **Development Mode:**
+```bash
+# For development with auto-restart
+npm run dev
+```
+
+### **Quick Start Scripts:**
+- **Windows:** Run `start.bat`
+- **Linux/Mac:** Run `start.sh`
+
+### **How the Server Works:**
+1. **Express Server** starts on port 3000
+2. **MongoDB Connection** established to cloud database
+3. **Static Files** served from current directory
+4. **API Endpoints** handle player data and leaderboard
+5. **CORS Enabled** for cross-origin requests
+
+### **Database Schema:**
+```javascript
+// Players collection
+{
+  "_id": "ObjectId",
+  "name": "Player Name",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "createdAt": "2024-01-01T00:00:00.000Z"
+}
+
+// Leaderboard collection
+{
+  "_id": "ObjectId",
+  "playerName": "Player Name",
+  "completionTime": 45.67,
+  "difficulty": 2,
+  "levelType": "Overground",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "createdAt": "2024-01-01T00:00:00.000Z"
+}
+```
+
+---
+
 ## 🚀 Key Features Explained
 
 ### **Sequential Command Execution:**
@@ -630,6 +932,18 @@ executeUserCode() → safeExecutor(window.marioAPI)        // Execute user code
 - Code editor and game both remain functional
 - Professional, modern interface
 
+### **Database Integration:**
+- **Player Name Storage:** Names stored in MongoDB with timestamps
+- **Leaderboard System:** Tracks completion times and scores
+- **Fallback Support:** Local storage if server unavailable
+- **Real-time Updates:** Data synchronized across sessions
+
+### **Multi-Platform Support:**
+- **Cross-Platform Scripts:** Windows (.bat) and Unix (.sh) start scripts
+- **Node.js Backend:** Express server with MongoDB integration
+- **Modern Web Standards:** HTML5, CSS3, ES6+ JavaScript
+- **Cloud Database:** MongoDB Atlas for global accessibility
+
 ---
 
 ## 🛠️ Development Tips
@@ -650,6 +964,28 @@ executeUserCode() → safeExecutor(window.marioAPI)        // Execute user code
 - Use browser console to see command execution
 - Check command queue with `marioAPI.getQueueLength()`
 - Monitor Mario's state with `marioAPI.getPosition()`
+- Check server logs for database operations
+- Use `/api/players` endpoint to verify data storage
 
-This architecture provides a clean separation of concerns while maintaining tight integration between all systems. The command system allows for flexible user control while the game engine handles all the complex rendering, physics, and state management behind the scenes.
+### **Database Management:**
+- Monitor MongoDB Atlas dashboard for data
+- Use `/api/leaderboard` endpoint to view scores
+- Check server console for connection status
+- Test API endpoints with Postman or curl
+
+### **Deployment Considerations:**
+- Ensure MongoDB connection string is secure
+- Set up environment variables for production
+- Configure CORS for your domain
+- Use PM2 or similar for process management
+- Set up SSL/HTTPS for production deployment
+
+### **Troubleshooting Common Issues:**
+- **CORS Errors:** Make sure to use `http://localhost:3000` not `file://`
+- **Database Connection:** Check MongoDB Atlas connection string
+- **Port Conflicts:** Ensure port 3000 is available
+- **Node Modules:** Run `npm install` if dependencies are missing
+- **Browser Cache:** Clear cache if changes don't appear
+
+This architecture provides a clean separation of concerns while maintaining tight integration between all systems. The command system allows for flexible user control while the game engine handles all the complex rendering, physics, and state management behind the scenes. The addition of MongoDB integration enables persistent player data and leaderboard functionality, making it a complete gaming experience with social features.
 
