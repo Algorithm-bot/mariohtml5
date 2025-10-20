@@ -134,7 +134,7 @@
 
 <body>
 <header>
-    <img src="mario.png" alt="Mario" class="mario"><br>
+    <img src="images/mario.png" alt="Mario" class="mario"><br>
     <h1>🎮 MARIO API COMMANDS REFERENCE</h1>
 </header>
 
@@ -211,76 +211,90 @@ if (pos.x > 100) {
     <details>
         <summary>For Programmers (Technical Deep Dive)</summary>
         <div class="explanation-content">
-            <p>This game is built on a custom JavaScript game engine called "Enjine" and features a state-based architecture, a Node.js backend with MongoDB, and a unique command-driven control system.</p>
-
-            <h3>Core Architecture: Enjine Game Engine</h3>
-            <p>The foundation is <code>Enjine/application.js</code>, which runs the main game loop (Update/Draw). It manages a state machine where each part of the game (title screen, level, leaderboard) is a distinct state object inheriting from <code>Enjine/state.js</code>. This ensures clean separation of concerns between different game phases.</p>
-            <ul>
-                <li>The <code>Application.Update(delta)</code> method is called every frame by <code>requestAnimationFrame</code>.</li>
-                <li>It delegates updates and rendering to the <code>currentState</code> (e.g., <code>LevelState</code>).</li>
-                <li>Sprites, rendering, and animations are handled by classes like <code>Enjine/sprite.js</code>.</li>
-            </ul>
-
-            <h3>State Management Flow</h3>
-            <p>The game progresses through a defined sequence of states:</p>
-            <p><code>NameInputState</code> → <code>TitleState</code> → <code>LoadingState</code> → <code>LevelState</code> → <code>Win/Lose/LeaderboardState</code></p>
-            <ul>
-                <li><code>NameInputState</code> uses the Fetch API to POST the player's name to the server's <code>/api/player</code> endpoint.</li>
-                <li><code>LevelState</code> is the core of gameplay. It initializes the procedurally generated level via <code>levelGenerator.js</code>, manages all sprites (Mario, enemies, items) in a <code>DrawableManager</code>, and controls the camera.</li>
-            </ul>
-
-            <h3>Command Execution System</h3>
-            <p>This is the most unique part of the project. User input doesn't come from keyboard events but from code executed in the UI.</p>
-            <ul>
-                <li><b>Interface (UI):</b> The user writes code that calls the global <code>marioAPI</code> object (defined in <code>code/commandManager.js</code>).</li>
-                <li><b>Safe Execution:</b> When the "Execute" button is clicked, the user's code is executed within a sandboxed function context: <code>new Function('marioAPI', userCode)(window.marioAPI)</code>. This prevents the user code from accessing global scope or manipulating the game's internal state directly.</li>
-                <li><b>Command Queue:</b> Each call to a <code>marioAPI</code> function (e.g., <code>marioAPI.move()</code>) doesn't execute immediately. Instead, it pushes a command object (e.g., <code>{ action: 'move', direction: 'right', steps: 10 }</code>) into a global FIFO queue (<code>commandQueue</code>).</li>
-                <li><b>Processing (Game Logic):</b> Inside the main game loop, <code>Mario.Character.prototype.processCommands()</code> is called every frame. It checks if Mario is currently busy. If not, it pulls the next command from the queue using <code>MarioCommandManager.getNextCommand()</code> (which performs a <code>commandQueue.shift()</code>).</li>
-                <li><b>Sequential Execution:</b> For commands that take time (like <code>move</code> or <code>wait</code>), a state flag (<code>this.isExecutingCommand</code>) and a counter (<code>this.commandSteps</code>) are set on the Mario character object. The command is processed over multiple frames until the counter reaches zero. Only then is the <code>isExecutingCommand</code> flag cleared, allowing the next command to be processed. Instant commands like <code>jump</code> are executed and completed in a single frame.</li>
-            </ul>
-
-            <h3>Backend & Database (Node.js/Express/MongoDB)</h3>
-            <p>The <code>server.js</code> file sets up an Express server with two main responsibilities:</p>
-            <ol>
-                <li><b>Static File Server:</b> It serves the <code>index.html</code>, JavaScript files, images, and sounds.</li>
-                <li><b>REST API:</b> It provides endpoints to interact with a MongoDB Atlas database.
-                    <ul>
-                        <li><code>POST /api/player</code>: Stores a new player's name.</li>
-                        <li><code>POST /api/leaderboard</code>: Stores the result of a completed level (name, time, difficulty).</li>
-                        <li><code>GET /api/leaderboard</code>: Retrieves sorted and paginated leaderboard data for display in the <code>LeaderboardState</code>.</li>
-                    </ul>
-                </li>
-            </ol>
-            <p>The server uses the official <code>mongodb</code> driver for database operations and the <code>cors</code> middleware to allow requests from the game client.</p>
+          <p>This project is based on <b>Infinite Mario</b>, an open-source clone of the classic Mario game originally by Markus Persson (Notch). In this version, every time the page is refreshed, the game generates a <b>completely new, procedurally generated level</b>. This is handled by <code>levelGenerator.js</code>, which dynamically constructs levels using <code>Math.random()</code> to decide terrain layout, enemy placements, pipes, and item locations. As no random seed is fixed, each refresh triggers a new sequence of random values — creating endless level variations.</p>
+      
+          <h3>How Procedural Level Generation Works</h3>
+          <ul>
+            <li><b>Step 1: Terrain Segments</b> — The generator divides the level into multiple segments such as plains, hills, jumps, gaps, tubes, and cannons. Each segment type is chosen randomly by functions like <code>BuildHillStraight()</code> and <code>BuildJump()</code>.</li>
+            <li><b>Step 2: Randomized Dimensions</b> — Each segment’s width, height, and difficulty are determined using random values, e.g. <code>length = (Math.random() * 10) | 0</code>.</li>
+            <li><b>Step 3: Enemy and Item Placement</b> — Enemies, coins, and power-ups are added via functions like <code>AddEnemyLine()</code> and <code>AddCoinJump()</code>, which also use randomness for position and quantity.</li>
+            <li><b>Step 4: Decorative Elements</b> — Bushes, clouds, and background details are added for variety using random offsets.</li>
+            <li><b>Result:</b> Since all generation depends on <code>Math.random()</code> (without a fixed seed), every refresh builds a unique layout, ensuring that <b>no two levels are ever the same</b>.</li>
+          </ul>
+      
+          <p>The game is built on a custom JavaScript game engine called "Enjine" and features a state-based architecture, a Node.js backend with MongoDB, and a unique command-driven control system.</p>
+      
+          <h3>Core Architecture: Enjine Game Engine</h3>
+          <p>The foundation is <code>Enjine/application.js</code>, which runs the main game loop (Update/Draw). It manages a state machine where each part of the game (title screen, level, leaderboard) is a distinct state object inheriting from <code>Enjine/state.js</code>. This ensures clean separation of concerns between different game phases.</p>
+          <ul>
+            <li>The <code>Application.Update(delta)</code> method is called every frame by <code>requestAnimationFrame</code>.</li>
+            <li>It delegates updates and rendering to the <code>currentState</code> (e.g., <code>LevelState</code>).</li>
+            <li>Sprites, rendering, and animations are handled by classes like <code>Enjine/sprite.js</code>.</li>
+          </ul>
+      
+          <h3>State Management Flow</h3>
+          <p>The game progresses through a defined sequence of states:</p>
+          <p><code>NameInputState</code> → <code>TitleState</code> → <code>LoadingState</code> → <code>LevelState</code> → <code>Win/Lose/LeaderboardState</code></p>
+          <ul>
+            <li><code>NameInputState</code> uses the Fetch API to POST the player's name to the server's <code>/api/player</code> endpoint.</li>
+            <li><code>LevelState</code> is the core of gameplay. It initializes the procedurally generated level via <code>levelGenerator.js</code>, manages all sprites (Mario, enemies, items) in a <code>DrawableManager</code>, and controls the camera.</li>
+          </ul>
+      
+          <h3>Command Execution System</h3>
+          <p>This is the most unique part of the project. User input doesn't come from keyboard events but from code executed in the UI.</p>
+          <ul>
+            <li><b>Interface (UI):</b> The user writes code that calls the global <code>marioAPI</code> object (defined in <code>code/commandManager.js</code>).</li>
+            <li><b>Safe Execution:</b> When the "Execute" button is clicked, the user's code is executed within a sandboxed function context: <code>new Function('marioAPI', userCode)(window.marioAPI)</code>. This prevents the user code from accessing global scope or manipulating the game's internal state directly.</li>
+            <li><b>Command Queue:</b> Each call to a <code>marioAPI</code> function (e.g., <code>marioAPI.move()</code>) doesn't execute immediately. Instead, it pushes a command object (e.g., <code>{ action: 'move', direction: 'right', steps: 10 }</code>) into a global FIFO queue (<code>commandQueue</code>).</li>
+            <li><b>Processing (Game Logic):</b> Inside the main game loop, <code>Mario.Character.prototype.processCommands()</code> is called every frame. It checks if Mario is currently busy. If not, it pulls the next command from the queue using <code>MarioCommandManager.getNextCommand()</code> (which performs a <code>commandQueue.shift()</code>).</li>
+            <li><b>Sequential Execution:</b> For commands that take time (like <code>move</code> or <code>wait</code>), a state flag (<code>this.isExecutingCommand</code>) and a counter (<code>this.commandSteps</code>) are set on the Mario character object. The command is processed over multiple frames until the counter reaches zero. Only then is the <code>isExecutingCommand</code> flag cleared, allowing the next command to be processed. Instant commands like <code>jump</code> are executed and completed in a single frame.</li>
+          </ul>
+      
+          <h3>Backend & Database (Node.js/Express/MongoDB)</h3>
+          <p>The <code>server.js</code> file sets up an Express server with two main responsibilities:</p>
+          <ol>
+            <li><b>Static File Server:</b> It serves the <code>index.html</code>, JavaScript files, images, and sounds.</li>
+            <li><b>REST API:</b> It provides endpoints to interact with a MongoDB Atlas database.
+              <ul>
+                <li><code>POST /api/player</code>: Stores a new player's name.</li>
+                <li><code>POST /api/leaderboard</code>: Stores the result of a completed level (name, time, difficulty).</li>
+                <li><code>GET /api/leaderboard</code>: Retrieves sorted and paginated leaderboard data for display in the <code>LeaderboardState</code>.</li>
+              </ul>
+            </li>
+          </ol>
+          <p>The server uses the official <code>mongodb</code> driver for database operations and the <code>cors</code> middleware to allow requests from the game client.</p>
         </div>
-    </details>
-
-    <details>
+      </details>
+      
+      <details>
         <summary>For Everyone (Simple Explanation)</summary>
         <div class="explanation-content">
-            <p>Ever wondered how you can control Mario with just a few lines of code? It's like being a director and giving Mario a script to follow, one instruction at a time. Here’s a simple breakdown!</p>
-
-            <h3>You are the Scriptwriter! ✍️</h3>
-            <p>The code editor on the left is your notepad. You write simple commands like <code>marioAPI.move("right", 10)</code>. Think of <code>marioAPI</code> as your personal translator who speaks "Mario's language." When you write a command, the translator makes a note of it.</p>
-            
-            <h3>Mario's To-Do List 📋</h3>
-            <p>Mario is a very focused guy—he only does one thing at a time. When you hit the "Execute" button, your script is handed to him. He doesn't try to do everything at once. Instead, he puts all your instructions into a single-file line, like people waiting for a ride at an amusement park. This is his "command queue."</p>
-
-            <h3>One Step at a Time... Literally! 🏃‍♂️</h3>
-            <p>The game is constantly running, checking many times per second what it should be doing. In each of these tiny moments (a "frame"), the game asks Mario, "Are you busy?"</p>
-            <ul>
-                <li>If Mario isn't busy, he looks at the first person in line (the first command on his to-do list). Let's say it's "move right for 10 steps."</li>
-                <li>He flips his "busy" sign to ON and starts walking right. He has a little counter in his head. Every frame, he takes one small step and his counter goes down: 10... 9... 8...</li>
-                <li>While his counter is not zero, he keeps telling the game, "I'm still busy with this 'move' command!" The rest of the commands in the line have to wait patiently.</li>
-                <li>Once his counter hits zero, he flips his "busy" sign to OFF. Now he's ready for the next command in line!</li>
-            </ul>
-            <p>This is why commands happen one after another, not all at the same time. It ensures your instructions are followed in the exact order you wrote them.</p>
-
-            <h3>The Global Scoreboard 🏆</h3>
-            <p>When you enter your name or finish a level, the game sends a little message over the internet to a special computer called a "server." This server keeps a giant, shared scoreboard (a "database") for all players. When you visit the leaderboard screen, your game asks the server, "Hey, can I see the latest scores?" The server sends back the list, and that's how you can compete with everyone else playing the game!</p>
+          <p>This version of Mario lets you control the game using code instead of a keyboard. You write small instructions that tell Mario what to do — move, jump, or wait — and the game carefully executes them one by one.</p>
+      
+          <h3>Writing Mario’s Instructions 🧠</h3>
+          <p>The code editor is where you type commands like <code>marioAPI.move("right", 10)</code> or <code>marioAPI.jump()</code>. Each command you write is sent to a system called the <b>command manager</b>, which stores your instructions instead of running them immediately.</p>
+      
+          <h3>The Command Queue System ⚙️</h3>
+          <p>When you click “Execute,” your code is safely run inside a sandbox — a protected environment that can only talk to <code>marioAPI</code>. Each command you call is added to a list called the <b>command queue</b>.</p>
+          <ul>
+            <li>The queue works in order — the first command you give is the first one that runs.</li>
+            <li>Mario checks this queue every frame (about 60 times per second).</li>
+            <li>If he’s not already doing something, he takes the next command and starts working on it.</li>
+            <li>Commands that take time, like moving 10 steps, are processed gradually over multiple frames until completed.</li>
+            <li>Once done, the next command begins automatically.</li>
+          </ul>
+          <p>This creates a smooth, predictable flow — Mario never skips, overlaps, or rushes commands.</p>
+      
+          <h3>Behind the Scenes 🎮</h3>
+          <p>The game constantly updates its state using a main loop. Every frame, it checks player commands, animations, collisions, and camera position. This keeps gameplay consistent no matter what commands you run.</p>
+      
+          <h3>Saving Progress and Scores 🌐</h3>
+          <p>When you enter your name or finish a level, the game sends a request to its backend server built with Node.js. The server stores your name, score, and completion time in a shared MongoDB database. When you open the leaderboard, the client requests this data using an API call, and the server returns the sorted results so you can see how you rank among other players.</p>
+      
+          <p>In short — you’re not just playing Mario, you’re <b>programming</b> his every move while the game handles all the timing, logic, and data behind the scenes.</p>
         </div>
-    </details>
-
+      </details>
+      
 </div>
 
 <footer>
