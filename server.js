@@ -4,10 +4,10 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 
 // MongoDB connection string
-const MONGODB_URI = 'mongodb+srv://sahil:mario77@cluster0.aaiy6sn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI ='mongodb+srv://sahil:qwerty123@cluster0.aaiy6sn.mongodb.net/mario_game?retryWrites=true&w=majority&appName=Cluster0';
 const DB_NAME = 'mario_game';
 const COLLECTION_NAME = 'players';
 

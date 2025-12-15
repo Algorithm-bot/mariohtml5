@@ -302,7 +302,7 @@ Mario.NameInputState.prototype.handleNameSubmit = function() {
         let errorMessage = 'Error saving name, but continuing to game...';
         
         if (error.message.includes('Failed to fetch')) {
-            errorMessage = 'Cannot connect to server. Name saved locally. Make sure to run "npm start" and access via http://localhost:3000';
+            errorMessage = 'Cannot connect to server. Name saved locally. Make sure to run "npm start" and access via http://localhost:3005';
         } else if (error.message.includes('HTTP error')) {
             errorMessage = 'Server error occurred. Name saved locally.';
         } else if (error.message.includes('file://')) {

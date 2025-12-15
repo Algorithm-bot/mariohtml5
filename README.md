@@ -37,7 +37,7 @@ A Mario-style HTML5 game with player name collection and MongoDB storage.
 
 2. Open your browser and go to:
    ```
-   http://localhost:3000
+   http://localhost:3005
    ```
 
 3. The game will load and show a name input popup
@@ -92,7 +92,7 @@ Player documents are stored with the following structure:
 
 - Make sure MongoDB connection string is correct
 - Check that all dependencies are installed
-- Ensure port 3000 is available
+- Ensure port 3005 is available
 - Check browser console for any JavaScript errors
 
 ## License
